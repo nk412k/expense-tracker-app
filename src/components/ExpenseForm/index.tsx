@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Pressable } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { ExpenseType } from '../../stores/types';
 
@@ -22,31 +24,46 @@ interface Props {
 
 const ExpenseForm = (props: Props): React.ReactElement => {
   const { onCancel, onSubmit, isEditing, expenseData } = props;
+  const [shouldShowDatePicker, setShouldShowDatePicker] = useState(false);
+
+  const getInitialDate = (): Date => {
+    if (isEditing && expenseData) {
+      return expenseData.date;
+    }
+    return new Date();
+  };
 
   const [formData, setFormData] = useState({
     amount: { value: expenseData?.amount?.toString() || '', isValid: true },
     date: {
-      value: expenseData?.date?.toISOString().slice(0, 10) || '',
+      value: getInitialDate(),
       isValid: true,
     },
     description: { value: expenseData?.description || '', isValid: true },
   });
 
   const isFormInValid = (): boolean => {
-    return (
-      !formData.amount.isValid ||
-      !formData.date.isValid ||
-      !formData.description.isValid
-    );
+    return !formData.amount.isValid || !formData.description.isValid;
   };
 
-  const onChangeInput = (inputField: string, inputValue: string) => {
+  const onChangeInput = (inputField: string, inputValue: string | Date) => {
     setFormData((prevState) => {
       return {
         ...prevState,
         [inputField]: { value: inputValue, isValid: true },
       };
     });
+  };
+
+  const onChangeDatePicker = (event: any, selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      setFormData((prevState) => {
+        return {
+          ...prevState,
+          date: { value: selectedDate, isValid: true },
+        };
+      });
+    }
   };
 
   const onSubmitForm = (): void => {
@@ -57,14 +74,13 @@ const ExpenseForm = (props: Props): React.ReactElement => {
     };
 
     const amountIsValid = !isNaN(expenseData.amount) && expenseData.amount > 0;
-    const dateIsValid = expenseData.date.toString() !== 'Invalid Date';
     const descriptionIsValid = expenseData.description.trim().length > 0;
 
-    if (!amountIsValid || !dateIsValid || !descriptionIsValid) {
+    if (!amountIsValid || !descriptionIsValid) {
       setFormData((curInputs) => {
         return {
           amount: { value: curInputs.amount.value, isValid: amountIsValid },
-          date: { value: curInputs.date.value, isValid: dateIsValid },
+          date: { value: curInputs.date.value, isValid: true },
           description: {
             value: curInputs.description.value,
             isValid: descriptionIsValid,
@@ -91,18 +107,27 @@ const ExpenseForm = (props: Props): React.ReactElement => {
           isValid={formData.amount.isValid}
           inputStyles={{ marginRight: 10, flex: 1 }}
         />
-        <Input
-          label='Date'
-          inputConfig={{
-            onChangeText: (value: string) => onChangeInput('date', value),
-            value: formData.date.value,
-            placeholder: 'YYYY-MM-DD',
-            maxLength: 10,
-          }}
-          isValid={formData.date.isValid}
-          inputStyles={{ flex: 1 }}
-        />
+        <Pressable
+          onPress={() => setShouldShowDatePicker(true)}
+          style={{ flex: 1 }}
+        >
+          <Input
+            label='Date'
+            inputConfig={{
+              value: formData.date.value.toISOString().slice(0, 10),
+              editable: false,
+            }}
+            isValid={formData.date.isValid}
+          />
+        </Pressable>
       </InputContainer>
+      {shouldShowDatePicker && (
+        <DateTimePicker
+          value={formData.date.value}
+          onChange={onChangeDatePicker}
+        />
+      )}
+
       <Input
         label='Description'
         inputConfig={{
