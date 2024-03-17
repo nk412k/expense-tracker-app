@@ -9,4 +9,5 @@ export enum ActionType {
   ADD = 'ADD',
   DELETE = 'DELETE',
   UPDATE = 'UPDATE',
+  SET = 'SET',
 }

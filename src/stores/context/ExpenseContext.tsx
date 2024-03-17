@@ -4,20 +4,22 @@ import { ActionType, ExpenseType } from '../types';
 
 export interface Props extends PropsWithChildren {}
 
-const { ADD, DELETE, UPDATE } = ActionType;
+const { ADD, DELETE, UPDATE, SET } = ActionType;
 
 export const ExpenseContext = createContext({
   expenses: [] as ExpenseType[],
-  addExpense: (expense: any) => {},
+  addExpense: (expense: ExpenseType) => {},
   deleteExpense: (id: string) => {},
   updateExpense: (id: string, data: ExpenseType) => {},
+  setExpenses: (expenses: ExpenseType[]) => {},
 });
 
 const expenseReducer = (state: ExpenseType[], action: any) => {
   switch (action.type) {
+    case SET:
+      return action.payload;
     case ADD:
-      const id = new Date().toString() + Math.random().toString();
-      return [{ id: id, ...action.payload }, ...state];
+      return [{ ...action.payload }, ...state];
     case DELETE:
       return state.filter((expense) => expense.id !== action.payload);
     case UPDATE:
@@ -43,6 +45,10 @@ const ExpenseProvider = (props: Props) => {
     dispatch({ type: ADD, payload: expenseData });
   };
 
+  const setExpenses = (expenses: ExpenseType[]) => {
+    dispatch({ type: SET, payload: expenses });
+  };
+
   const deleteExpense = (id: string) => {
     dispatch({ type: DELETE, payload: id });
   };
@@ -56,6 +62,7 @@ const ExpenseProvider = (props: Props) => {
     addExpense,
     deleteExpense,
     updateExpense,
+    setExpenses,
   };
   return (
     <ExpenseContext.Provider value={value}>{children}</ExpenseContext.Provider>
