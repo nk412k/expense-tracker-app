@@ -47,6 +47,7 @@ const ExpenseForm = (props: Props): React.ReactElement => {
   };
 
   const onChangeInput = (inputField: string, inputValue: string | Date) => {
+    setShouldShowDatePicker(false);
     setFormData((prevState) => {
       return {
         ...prevState,
